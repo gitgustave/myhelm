@@ -1,0 +1,63 @@
+namespace: "test"
+service_name: "test"
+stage: "dev"
+
+tolerations:
+  - key: "dummy"
+    operator: "Equal"
+    value: ""
+    effect: "NoSchedule"
+
+deployment:
+  replicas: 1
+  image: nginx
+  port: 8080
+  volume_mount_enabled: false
+  secret_mount_enabled: false
+  secret_mounts:
+    - secret_name: "mms2-stg-appsecret"
+      volume_name: "secret"
+      mountPath: "/app/appsecrets.STG.json"
+      secret_subPath: "appsecrets.STG.json"
+  smb_mount_enabled: false
+  smb_mounts:
+    - volume_name: "smb"
+      mountPath: "/scandoc"
+      readOnly: true
+      pvc_claim_name: pvc-smb
+      
+env:
+  - name: "NAME"
+    value: "Value"
+
+secret_env: {}
+# kubectl create -n demo secret generic name --from-literal=key-id='' --from-literal=secret-key=''
+#  - name: SECTRET_NAME
+#    valueFrom:
+#      secretKeyRef:
+#        name: ''
+#        key: key-id
+
+ingress:
+  enabled: false
+  classname: nginx
+
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # @TODO add condition
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "server: hide";
+  # If setting up mms2 cluster service leave default_cert value True
+  default_cert: true
+  hosts:
+    - domain1.com
+    - domain3.com
+    - google.com
+    - yahoo.com
+
+  host_names:
+    - host: domain1.com
+      secretname: test-cert
+    - host: domain3.com
+      secretname: default-cert

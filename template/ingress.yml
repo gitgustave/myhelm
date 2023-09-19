@@ -1,0 +1,47 @@
+{{-  if eq .Values.ingress.enabled true }}
+{{- $service_name := .Values.service_name -}}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name:  {{ $service_name }}-{{ .Values.stage }}
+  annotations:
+    {{ .Values.ingress.annotations | toYaml | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.classname }}
+  {{ if eq .Values.ingress.default_cert false}}
+  tls:
+  {{- range $v := .Values.ingress.host_names }}
+  - hosts: 
+    - {{ $v.host }}
+    secretName: {{ $v.secretname }}
+  {{- end }}
+  rules:
+   {{- range $v := .Values.ingress.host_names }}
+  - host: "{{ $v.host }}"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: {{ $service_name }}
+            port:
+              number: 80
+{{- end }}
+{{ else }}
+  rules:
+   {{- range .Values.ingress.hosts }}
+  - host: "{{ . }}"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: {{ $service_name }}
+            port:
+              number: 80
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.service_name }}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      component: {{ .Values.service_name }}
+      stage: {{ .Values.stage }}
+  template:
+    metadata:
+      labels:
+        component: {{ .Values.service_name }}
+        stage: {{ .Values.stage }}
+    spec:
+      containers:
+        - name: {{ .Values.service_name }}
+          image: {{ .Values.deployment.image }}
+          env:
+            {{- range .Values.env }}
+            - name: "{{ .name }}"
+              value: "{{ .value }}"
+            {{- end}}
+            {{- range .Values.secret_env }}
+            - name: "{{ .name }}"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .valueFrom.secretKeyRef.name }}
+                  key: {{ .valueFrom.secretKeyRef.key }}
+            {{- end}}
+          ports:
+            - containerPort: {{ .Values.deployment.port }}
+      {{-  if eq .Values.deployment.volume_mount_enabled true }}
+          volumeMounts:
+      {{-  if eq .Values.deployment.secret_mount_enabled true }}
+            {{- range .Values.deployment.secret_mounts }}
+            - name: "{{ .volume_name }}"
+              mountPath: "{{ .mountPath }}"
+              subPath: "{{ .secret_subPath }}"
+              readOnly: true
+            {{- end}}
+      {{- end }}
+      {{-  if eq .Values.deployment.smb_mount_enabled true }}
+            {{- range .Values.deployment.smb_mounts }}
+            - name: "{{ .volume_name }}"
+              mountPath: "{{ .mountPath }}"
+              readOnly: {{ .readOnly }}
+            {{- end}}
+      {{- end }}
+      {{- end }}
+      {{-  if eq .Values.deployment.volume_mount_enabled true }}
+      volumes:
+      {{-  if eq .Values.deployment.secret_mount_enabled true }}
+        {{- range .Values.deployment.secret_mounts }}
+        - name: "{{ .volume_name }}"
+          secret:
+            secretName: "{{ .secret_name }}"
+            optional: true
+        {{- end}}
+      {{- end }}
+      {{-  if eq .Values.deployment.smb_mount_enabled true }}
+        {{- range .Values.deployment.smb_mounts }}
+        - name: "{{ .volume_name }}"
+          persistentVolumeClaim:
+            claimName: "{{ .pvc_claim_name }}"
+        {{- end}}
+      {{- end }}
+      {{- end }}
+      tolerations:
+          {{- range .Values.tolerations }}
+          - key: "{{ .key }}"
+            operator: "{{ .operator }}"
+            value: "{{ .value }}"
+            effect: "{{ .effect }}"
+          {{- end }}
