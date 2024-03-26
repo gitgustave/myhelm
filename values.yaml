@@ -15,9 +15,9 @@ deployment:
   volume_mount_enabled: false
   secret_mount_enabled: false
   secret_mounts:
-    - secret_name: "mms2-stg-appsecret"
+    - secret_name: ""
       volume_name: "secret"
-      mountPath: "/app/appsecrets.STG.json"
+      mountPath: "/app/appsecrets.json"
       secret_subPath: "appsecrets.STG.json"
   smb_mount_enabled: false
   smb_mounts:
@@ -48,7 +48,7 @@ ingress:
     # @TODO add condition
     nginx.ingress.kubernetes.io/configuration-snippet: |
       more_set_headers "server: hide";
-  # If setting up mms2 cluster service leave default_cert value True
+  # If setting up new cluster service leave default_cert value True
   default_cert: true
   hosts:
     - domain1.com
