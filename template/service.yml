@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.service_name }}
+spec:
+  selector:
+    component: {{ .Values.service_name }}
+    stage: {{ .Values.stage }}
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: {{ .Values.deployment.port }}
